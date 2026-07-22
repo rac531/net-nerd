@@ -5,9 +5,16 @@
 body {
   background-color: #000000;
   color: #9CA3AF;
+  color-scheme: dark;
 }
 
 h1, h2, h3, h4 {
+  color: #FFFFFF;
+}
+
+input,
+textarea,
+select {
   color: #FFFFFF;
 }
 
