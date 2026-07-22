@@ -2,9 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 
-const XP_PER_CORRECT_ANSWER = 10
-
-export async function submitAnswer(
+export async function submitReviewAnswer(
   questionId: string,
   choiceId: string,
   isCorrect: boolean
@@ -14,6 +12,7 @@ export async function submitAnswer(
 
   if (!user) return { error: 'Not authenticated' }
 
+  // log the retry attempt same as normal practice
   const { error: progressError } = await supabase.from('user_progress').insert({
     user_id: user.id,
     question_id: questionId,
@@ -23,11 +22,7 @@ export async function submitAnswer(
   if (progressError) return { error: progressError.message }
 
   if (isCorrect) {
-    const { error: xpError } = await supabase.rpc('increment_xp', {
-      user_id_input: user.id,
-      amount: XP_PER_CORRECT_ANSWER,
-    })
-    if (xpError) return { error: xpError.message }
+    await supabase.rpc('increment_xp', { user_id_input: user.id, amount: 10 })
   }
 
   return { success: true }

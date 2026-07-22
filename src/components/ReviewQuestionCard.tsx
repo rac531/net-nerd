@@ -1,47 +1,45 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { submitAnswer } from '@/app/practice/[categorySlug]/actions'
+import { submitReviewAnswer } from '@/app/review/actions'
 
 type Choice = { id: string; choice_text: string; is_correct: boolean }
-type Question = { id: string; question_text: string; explanation: string | null; answer_choices: Choice[] }
+type Question = {
+  id: string
+  question_text: string
+  explanation: string | null
+  categories: { name: string }[] | null
+  answer_choices: Choice[]
+}
 
-export default function QuestionCard({
-  question,
-}: {
-  question: Question
-  categorySlug: string
-}) {
+export default function ReviewQuestionCard({ question }: { question: Question }) {
   const [selected, setSelected] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
-  const router = useRouter()
 
   const selectedChoice = question.answer_choices.find((c) => c.id === selected)
   const isCorrect = selectedChoice?.is_correct ?? false
+  const categoryName = question.categories?.[0]?.name
 
   async function handleSubmit() {
     if (!selected) return
     setSubmitted(true)
-    await submitAnswer(question.id, selected, isCorrect)
-  }
-
-  function handleNext() {
-    router.refresh()
+    await submitReviewAnswer(question.id, selected, isCorrect)
   }
 
   return (
-    <div className="mt-8 border-t border-gray-800 pt-8">
-      <p className="text-lg text-white">{question.question_text}</p>
+    <div className="py-8">
+      {categoryName && (
+        <p className="text-xs uppercase tracking-wide text-gray-500">{categoryName}</p>
+      )}
+      <p className="mt-1 text-lg text-white">{question.question_text}</p>
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-4 space-y-2">
         {question.answer_choices.map((choice) => {
           const isSelected = selected === choice.id
-          const showResult = submitted
           let style = 'border-gray-800 hover:border-gray-600 text-gray-300'
 
-          if (showResult && choice.is_correct) style = 'border-green-600 text-green-500'
-          else if (showResult && isSelected && !choice.is_correct) style = 'border-red-600 text-red-500'
+          if (submitted && choice.is_correct) style = 'border-green-600 text-green-500'
+          else if (submitted && isSelected && !choice.is_correct) style = 'border-red-600 text-red-500'
           else if (isSelected) style = 'border-red-600 text-white'
 
           return (
@@ -61,24 +59,18 @@ export default function QuestionCard({
         <button
           onClick={handleSubmit}
           disabled={!selected}
-          className="mt-6 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-30"
+          className="mt-4 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-30"
         >
           Submit
         </button>
       ) : (
-        <div className="mt-6">
+        <div className="mt-4">
           <p className={isCorrect ? 'text-sm font-medium text-green-500' : 'text-sm font-medium text-red-500'}>
-            {isCorrect ? 'Correct' : 'Incorrect'}
+            {isCorrect ? 'Correct' : 'Still incorrect'}
           </p>
           {question.explanation && (
             <p className="mt-2 text-sm text-gray-400">{question.explanation}</p>
           )}
-          <button
-            onClick={handleNext}
-            className="mt-4 rounded border border-gray-800 px-4 py-2 text-sm text-white hover:border-gray-600"
-          >
-            Next question
-          </button>
         </div>
       )}
     </div>
